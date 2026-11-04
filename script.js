@@ -1,4 +1,4 @@
-/* =====================================================
+* =====================================================
    Creative Cloud para Educación - Lógica de la página
    ===================================================== */
 document.addEventListener('DOMContentLoaded', () => {
@@ -212,19 +212,63 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  form.addEventListener('submit', e => {
-    e.preventDefault();                                   // evita recargar la página
-    const results = Object.keys(rules).map(validateField);
-    if (results.includes(false)) {
-      // Lleva el foco al primer campo con error
-      form.querySelector('.invalid input').focus();
-      return;
-    }
-    // Aquí iría el envío real (fetch a tu backend). Se simula éxito.
-    document.getElementById('successName').textContent = document.getElementById('nombre').value.trim().split(' ')[0];
-    form.hidden = true;
-    success.hidden = false;
-  });
+  
+
+
+  emailjs.init('6M3ghrZhLViTlGmwQ');
+
+form.addEventListener('submit', e => {
+  e.preventDefault();                                   // evita recargar la página
+
+  // Validación (la misma de antes)
+  const results = Object.keys(rules).map(validateField);
+  if (results.includes(false)) {
+    form.querySelector('.invalid input').focus();
+    return;
+  }
+
+    // Datos para la plantilla: los nombres deben coincidir con {{...}}
+  const select = document.getElementById('interes');
+
+  const params = {
+    nombre: document.getElementById('nombre').value.trim(),
+    correo: document.getElementById('correo').value.trim(),
+    institucion: document.getElementById('institucion').value.trim(),
+    interes: select.options[select.selectedIndex].text   // texto visible de la opción
+  };
+
+  // Una plantilla distinta para cada opción del select
+  const PLANTILLAS = {
+    informacion: 'template_ciwd7ca',          // la que ya tienes (o la que dejes para información)
+    demostracion: 'template_j2y7iil'  // pega aquí el ID de la plantilla nueva
+  };
+  const templateId = PLANTILLAS[select.value];
+  
+
+  // Evita doble clic mientras se envía
+  const btn = form.querySelector('button[type="submit"]');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+    emailjs.send('service_fxavh9b', templateId, params)
+    .then(() => {
+      document.getElementById('successName').textContent = params.nombre.split(' ')[0];
+      form.hidden = true;
+      success.hidden = false;
+    })
+    .catch(err => {
+      console.error('Error EmailJS:', err);
+      alert('No pudimos enviar tu solicitud. Intenta de nuevo en unos minutos.');
+    })
+    .finally(() => {
+      btn.disabled = false;
+      btn.innerHTML = 'Enviar <span aria-hidden="true">→</span>';
+    });
+});
+
+
+
+
 
   document.getElementById('again').addEventListener('click', () => {
     form.reset();
